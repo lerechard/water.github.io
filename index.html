@@ -1,3 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Water Shutoff Warning</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f2f2f2;
+      text-align: center;
+      padding: 50px;
+    }
+    h1 {
+      color: #333;
+    }
+    button {
+      padding: 15px 30px;
+      font-size: 18px;
+      cursor: pointer;
+      margin: 10px;
+    }
+    #timer {
+      margin-top: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      color: red;
+    }
+  </style>
+</head>
 <body>
   <h1>Water Shutoff Notification</h1>
   <p>This site is used to alert tenants of a scheduled water shutoff with 15 minutes prior notice.</p>
@@ -8,7 +38,7 @@
 
   <script>
     const display = document.getElementById('timer');
-    const TIMER_DURATION = 15 * 60; // 15 minutes
+    const TIMER_DURATION = 15 * 60; // 15 minutes in seconds
     let interval;
 
     function startWarning() {
@@ -48,8 +78,8 @@
 
     function sendWebhook(message) {
       const parts = [
-        "https://discord.com/api/webhooks/1397639192997134558/",
-        "cQ4BJa8HBtZ2ha32EKoxWFYllqbDIpqbX1LZZZ3Bz9ouo1fPMpP9GpMC9urgCZtEdSfr"
+        "https://discord.com/api/webhooks/1397642531315122307/",
+        "f76Z-_06N4kyaeL4XHIipf24t84FyWbN8tffwW7ih4u868cbVE1HIHgihw_FUKCC-9Qx"
       ];
       const url = parts.join("");
       fetch(url, {
@@ -81,3 +111,4 @@
     };
   </script>
 </body>
+</html>
