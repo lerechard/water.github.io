@@ -1,60 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Water Shutoff Warning</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #f2f2f2;
-      text-align: center;
-      padding: 50px;
-    }
-    h1 {
-      color: #333;
-    }
-    button {
-      padding: 15px 30px;
-      font-size: 18px;
-      cursor: pointer;
-    }
-    #timer {
-      margin-top: 20px;
-      font-size: 24px;
-      font-weight: bold;
-      color: red;
-    }
-  </style>
-</head>
 <body>
   <h1>Water Shutoff Notification</h1>
   <p>This site is used to alert tenants of a scheduled water shutoff with 15 minutes prior notice.</p>
   <p>Note - timer does not make noise when it ends.</p>
   <button onclick="startWarning()">Send Warning & Start Timer</button>
+  <button onclick="announceWaterRestored()">Announce Water Restored</button>
   <div id="timer"></div>
 
   <script>
+    const display = document.getElementById('timer');
+    const TIMER_DURATION = 15 * 60; // 15 minutes
+    let interval;
+
     function startWarning() {
-      sendWebhook();
-      startTimer(15 * 60);
+      const endTime = Date.now() + TIMER_DURATION * 1000;
+      localStorage.setItem("waterShutoffEndTime", endTime);
+      sendWebhook("🚨 Water will be shut off in 15 minutes. Please prepare accordingly.");
+      startTimer(endTime);
     }
 
-    function startTimer(duration) {
-      let timer = duration, minutes, seconds;
-      const display = document.getElementById('timer');
-      const interval = setInterval(() => {
-        minutes = Math.floor(timer / 60);
-        seconds = timer % 60;
-        display.textContent = `Water shuts off in ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-        if (--timer < 0) {
+    function startTimer(endTime) {
+      clearInterval(interval);
+
+      function updateTimer() {
+        const now = Date.now();
+        const remaining = Math.floor((endTime - now) / 1000);
+        if (remaining >= 0) {
+          const minutes = Math.floor(remaining / 60);
+          const seconds = remaining % 60;
+          display.textContent = `Water shuts off in ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        } else {
           clearInterval(interval);
           display.textContent = "Water shutoff has begun.";
+          localStorage.removeItem("waterShutoffEndTime");
         }
-      }, 1000);
+      }
+
+      updateTimer();
+      interval = setInterval(updateTimer, 1000);
     }
 
-    function sendWebhook() {
+    function announceWaterRestored() {
+      clearInterval(interval);
+      display.textContent = "💧 Water service has been restored.";
+      localStorage.removeItem("waterShutoffEndTime");
+      sendWebhook("💧 Water service has been restored.");
+    }
+
+    function sendWebhook(message) {
       const parts = [
         "https://discord.com/api/webhooks/1397639192997134558/",
         "cQ4BJa8HBtZ2ha32EKoxWFYllqbDIpqbX1LZZZ3Bz9ouo1fPMpP9GpMC9urgCZtEdSfr"
@@ -65,9 +57,7 @@
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          content: "🚨 Water will be shut off in 15 minutes. Please prepare accordingly."
-        })
+        body: JSON.stringify({ content: message })
       }).then(res => {
         if (res.ok) {
           console.log("Webhook sent.");
@@ -76,6 +66,18 @@
         }
       }).catch(err => console.error("Error sending webhook:", err));
     }
+
+    window.onload = () => {
+      const storedEndTime = localStorage.getItem("waterShutoffEndTime");
+      if (storedEndTime) {
+        const endTime = parseInt(storedEndTime, 10);
+        if (Date.now() < endTime) {
+          startTimer(endTime);
+        } else {
+          display.textContent = "Water shutoff has begun.";
+          localStorage.removeItem("waterShutoffEndTime");
+        }
+      }
+    };
   </script>
 </body>
-</html>
